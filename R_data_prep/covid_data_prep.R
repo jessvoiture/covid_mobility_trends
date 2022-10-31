@@ -17,6 +17,13 @@ covid_df <- read.csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/
 # dates of US state stay-at-home orders
 sah_dates <- read.csv("state_stay-at-home_orders.csv")
 
+# constants ---------------------------------------------------------------
+
+# export variables
+export_path = "~/Documents/School/Resume/2022_08/economist/covid_mobility_trends/csv_files/"
+us_export_path = paste(export_path, "us_ntl_data.csv", sep="")
+state_export_path = paste(export_path, "state_data.csv", sep="")
+
 # functions ---------------------------------------------------------------
 find_week <- function(date_of_interest, week_start_day) {
   d <- as.Date(date_of_interest)
@@ -31,7 +38,11 @@ find_week_V <- Vectorize(find_week)
 ########## STAY AT HOME START DATE DATA ########## 
 sah_dates <- sah_dates %>%
   mutate(date = as.Date(date)) %>%
-  rename("sah_start_date" = "date")
+  rename("sah_start_date" = "date") %>%
+  mutate(sah_day_of_week = case_when(
+    is.na(sah_start_date) ~ 1,
+    TRUE ~ wday(sah_start_date)
+  ))
 
 ########## MOBILITY DATA ##########
 df <- mobility_df %>%
@@ -73,6 +84,16 @@ df <- df %>%
   group_by(region) %>%
   # percent difference week to week
   mutate(percent_diff = percent_change - lag(percent_change))
+
+df_day_max_mobility_diff <- df %>%
+  filter(week_start_date < as.Date("2020-04-30")) %>%
+  group_by(region) %>%
+  slice_min(order_by = percent_diff) %>%
+  select(region, week_start_date) %>%
+  rename("week_biggest_change_mobility" = "week_start_date")
+
+df <- df %>% 
+  left_join(df_day_max_mobility_diff, by = "region")
 
 ########## COVID DATA ##########
 covid_df <- covid_df %>%
@@ -120,6 +141,24 @@ covid_df <- covid_df %>%
   # find average percent change over week period
   summarise(weekly_avg_new_cases = round(mean(new_cases, na.rm = T), 1))
 
-########## JOIN MOBILITY AND COVID DATA ##########
+########## JOIN DATA ##########
 df <- df %>%
-  left_join(covid_df, by = c("region", "week_start_date"))
+  left_join(covid_df, by = c("region", "week_start_date")) %>%
+  left_join(sah_dates, by = c("region" = "state")) %>%
+  mutate(mobility_lockdown_lag_wk = as.numeric(difftime(sah_start_date, week_biggest_change_mobility, units="week")))
+
+########## PREPARE DF FOR EXPORT ##########
+# CSV 1 = covid cases and mobility by week for US nationally
+us_df <- df %>%
+  filter(region == "US")
+
+write_csv(us_df, us_export_path)
+
+# CSV 2 = date of largest decline in mobility -> sah start date with covid and mobility data BY STATE
+state_df <- df %>%
+  filter(week_start_date <= sah_start_date &
+           week_start_date >= week_biggest_change_mobility) 
+
+write_csv(state_df, state_export_path)
+
+
