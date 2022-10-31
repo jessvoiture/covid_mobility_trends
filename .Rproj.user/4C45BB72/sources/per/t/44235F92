@@ -1,0 +1,27 @@
+{
+    "id": "44235F92",
+    "path": "~/Documents/School/Resume/2022_08/economist/covid_data/covid_data.R",
+    "project_path": "covid_data.R",
+    "type": "r_source",
+    "hash": "3892867512",
+    "contents": "",
+    "dirty": false,
+    "created": 1666442534387.0,
+    "source_on_save": false,
+    "relative_order": 1,
+    "properties": {
+        "tempName": "Untitled1",
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "157,31",
+        "scrollLine": "148"
+    },
+    "folds": "9|12|27|0|\n28|15|36|0|\n37|21|77|0|\n",
+    "lastKnownWriteTime": 1667159519,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1667159519710,
+    "read_only": false,
+    "read_only_alternatives": []
+}

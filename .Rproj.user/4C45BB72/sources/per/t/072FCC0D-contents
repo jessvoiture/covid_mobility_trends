@@ -1,0 +1,91 @@
+require(tidyverse)
+require(dplyr)
+require(ggplot2)
+require(lubridate)
+require(sf)
+require(leaflet)
+require(shiny)
+require(plotly)
+
+# load data ---------------------------------------------------------------
+
+# google mobility data
+mobility_df <- read.csv("Global_Mobility_Report.csv")
+
+# covid cases jhu
+covid_df <- read.csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_US.csv")
+
+# data processing ---------------------------------------------------------
+
+########## MOBILITY DATA ##########
+mobility_df <- mobility_df %>%
+  select(-c(grocery_and_pharmacy_percent_change_from_baseline, 
+            residential_percent_change_from_baseline,
+            parks_percent_change_from_baseline)) %>%
+  filter(country_region == "United States") %>%
+  #filter(sub_region_1 == "") %>%
+  mutate(date = as.Date(date)) %>%
+  mutate(year = year(date)) %>%
+  # convert dates to week
+  mutate(week = floor_date(as.Date(date, "%m/%d/%Y"), unit="week", week_start = 3)) %>% 
+  pivot_longer(cols = contains("percent_change"), names_to = "category", values_to = "percent_change") 
+
+# mean percent change in mobility each week for each region and category
+# percent diff over weeks
+df_week <- mobility_df %>%
+  group_by(sub_region_2, week, year) %>%
+  summarise(percent_change = mean(percent_change, na.rm = T)) %>%
+  ungroup() %>%
+  arrange(sub_region_2, week) %>%
+  group_by(sub_region_2) %>%
+  mutate(percent_diff = percent_change - lag(percent_change))
+
+df_week_filter <- df_week %>%
+  filter(week >= as.Date("2020-03-10") &
+           week <= as.Date("2020-12-05"))
+
+chart <- ggplot(
+  df_week_filter, 
+  aes(x = week, 
+      y = percent_change,
+      colour = as.factor(sub_region_1), 
+      group = as.factor(sub_region_1),
+      text = paste(df_week_filter$sub_region_1))) +  
+  geom_line()
+
+us_covid <- us_covid %>%
+  mutate(date = mdy(Date)) %>%
+  select(-c(Date, Historic.Cases)) %>%
+  rename("Cases" = "Weekly.Cases")
+
+df <- df_week %>%
+  left_join(us_covid, by=c("week" = "date"))
+
+
+########## PLOT
+par(mar=c(5, 4, 4, 6) + 0.1)
+
+## Plot first set of data and draw its axis
+plot(df$week, df$percent_change, pch=16, axes=FALSE, ylim=c(-80,20), xlab="", ylab="", 
+     type="l",col="black", main="Covid")
+axis(2, ylim=c(-80,20),col="black",las=1)  ## las=1 makes horizontal labels
+mtext("Mobility change",side=2,line=2.5)
+box()
+
+## Allow a second plot on the same graph
+par(new=TRUE)
+
+## Plot the second plot and put axis scale on right
+plot(df$week, df$Cases, pch=15,  xlab="", ylab="", ylim=c(0,5600000), 
+     axes=FALSE, type="l", col="red")
+## a little farther out (line=4) to make room for labels
+mtext("Cases",side=4,col="red",line=4) 
+axis(4, ylim=c(0,5600000), col="red",col.axis="red",las=1)
+
+## Draw the time axis
+axis(1, df$week, format(df$week, "%B"))
+mtext("Week",side=1,col="black",line=2.5)  
+
+## Add Legend
+legend("topleft",legend=c("Percent Change","Cases"),
+       text.col=c("black","red"),pch=c(8,5),col=c("black","red"))
