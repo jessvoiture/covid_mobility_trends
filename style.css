@@ -1,0 +1,20 @@
+div.tooltip { 
+    position: absolute;     
+    text-align: left; 
+    max-width: 200px;          
+    height: auto;  
+    /* padding: 5px;        */
+    font-family: Arial, Helvetica, sans-serif;   
+    font-size: 12px;
+    background: white; 
+    opacity: 0.5;   
+}
+
+.domain {
+    fill: none;
+    stroke: none;
+}
+
+.tick line{
+    visibility: hidden;
+  }
