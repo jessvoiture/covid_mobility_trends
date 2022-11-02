@@ -3,11 +3,11 @@ div.tooltip {
     text-align: left; 
     max-width: 200px;          
     height: auto;  
-    /* padding: 5px;        */
+    padding: 5px;       
     font-family: Arial, Helvetica, sans-serif;   
     font-size: 12px;
     background: white; 
-    opacity: 0.5;   
+    opacity: 0.7;   
 }
 
 .domain {
@@ -15,6 +15,18 @@ div.tooltip {
     stroke: none;
 }
 
-.tick line{
+.tick line {
     visibility: hidden;
-  }
+}
+
+text {
+    font-family: sans-serif;
+}
+
+.tooltip_title, .tooltip_content {
+    font-family: sans-serif;
+}
+
+.tooltip_title {
+    font-weight: bold;
+}
