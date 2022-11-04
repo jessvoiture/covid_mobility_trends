@@ -65,7 +65,6 @@ d3.csv("https://raw.githubusercontent.com/jessvoiture/covid_mobility_trends/mast
     svg.append("g")
         .attr("class", "x_axis")
         .call(d3.axisTop(x_scale)
-            // .ticks(tickAmount)
             .ticks(ticks_unit)
             .tickFormat(d3.timeFormat("%b %d")))
 
@@ -168,13 +167,8 @@ d3.csv("https://raw.githubusercontent.com/jessvoiture/covid_mobility_trends/mast
         d3.selectAll("line").attr("opacity", 0.1);
         d3.selectAll("text").attr("opacity", 0.1);
 
+        d3.select("text").attr("font-weight", "bold");
         d3.selectAll("#" + this_id).attr("opacity", 1);
-
-        // div.html("<span class = tooltip_title>" + d.region + " (" + d.Code + ")" + "</span>" + "<br>" + 
-        //          "<span class = tooltip_content>" + "A " + d.percent_diff + " decrease in mobility from previous week occured on" + d.week_start_date +
-        //          ". " + d.region + " implemented a stay-at-home order on" +  d.sah_week_start_date + "</span>")
-        //     .style("left", (e.pageX ) + "px")
-        //     .style("top", (e.pageY) + "px");
     }
 
     function onMouseout() {
@@ -185,6 +179,8 @@ d3.csv("https://raw.githubusercontent.com/jessvoiture/covid_mobility_trends/mast
         d3.selectAll("circle").attr("opacity", 1);
         d3.selectAll("line").attr("opacity", 1);
         d3.selectAll("text").attr("opacity", 1);
+
+        d3.selectAll("text").attr("font-weight", "normal");
     }
 
     // tooltip
@@ -202,32 +198,91 @@ d3.csv("https://raw.githubusercontent.com/jessvoiture/covid_mobility_trends/mast
                 .style("opacity", "0");
         });
 
+    /* SCROLL TRIGGERS */
+
+    // pin timeline in place
+    ScrollTrigger.create({
+        trigger: '.viz-wrapper',
+        endTrigger: '#body_text1',
+        start: 'center center',
+        end: 'top 100%',
+        pin: true,
+        pinSpacing: false
+    });
+    
+    // highlight the week with the biggest mobility drop (start_circ)
+    ScrollTrigger.create({
+        trigger: '#step1',
+        start: 'bottom 90%', // start when the bottom of the trigger hits 90% down from the top of the viewport
+        onEnter: highlight_start_circ,
+        onEnterBack: highlight_start_circ,
+        onLeave: highlight_sah_circ,
+        onLeaveBack: full_opacity_everything,
+        markers: false,
+        id: 'highlight_start_circ'
+        });
+
+    // highlight the week when the stay at home order started (sah_circ)
+    ScrollTrigger.create({
+        trigger: '#step2',
+        start: 'bottom 70%', // start when the bottom of the trigger hits 70% down from the top of the viewport
+        onEnter: highlight_sah_circ,
+        onEnterBack: highlight_sah_circ,
+        onLeave: full_opacity_everything,
+        onLeaveBack: highlight_start_circ,
+        markers: false,
+        id: 'highlight_sah_circ'
+        });
+
+    function highlight_start_circ() {
+        start_circs
+            .transition()
+            .duration(500)
+            .style("opacity", 1);
+
+        sah_circs
+            .transition()
+            .duration(500)
+            .style("opacity", 0.1);
+
+        lines_btwn
+            .transition()
+            .duration(500)
+            .style("opacity", 0.1);
+        }
+
+    function highlight_sah_circ() {
+        start_circs
+            .transition()
+            .duration(500)
+            .style("opacity", 0.1);
+
+        sah_circs
+            .transition()
+            .duration(500)
+            .style("opacity", 1);
+
+        lines_btwn
+            .transition()
+            .duration(500)
+            .style("opacity", 0.1);
+        }
+
+    function full_opacity_everything() {
+        start_circs
+            .transition()
+            .duration(500)
+            .style("opacity", 1);
+
+        sah_circs
+            .transition()
+            .duration(500)
+            .style("opacity", 1);
+
+        lines_btwn
+            .transition()
+            .duration(500)
+            .style("opacity", 1);
+    }
 
 })
-
-function responsivefy(svg) {
-    // get container + svg aspect ratio
-    var container = d3.select(svg.node().parentNode),
-        width = parseInt(svg.style("width")),
-        height = parseInt(svg.style("height")),
-        aspect = width / height;
-
-    // add viewBox and preserveAspectRatio properties,
-    // and call resize so that svg resizes on inital page load
-    svg.attr("viewBox", "0 0 " + width + " " + height)
-        .attr("perserveAspectRatio", "xMinYMid")
-        .call(resize);
-
-    // to register multiple listeners for same event type, 
-    // you need to add namespace, i.e., 'click.foo'
-    // necessary if you call invoke this function for multiple svgs
-    // api docs: https://github.com/mbostock/d3/wiki/Selections#on
-    d3.select(window).on("resize." + container.attr("id"), resize);
-
-    // get width of container and resize svg to fit it
-    function resize() {
-        var targetWidth = parseInt(container.style("width"));
-        svg.attr("width", targetWidth);
-        svg.attr("height", Math.round(targetWidth / aspect));
-    }
-}

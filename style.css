@@ -19,7 +19,7 @@ div.tooltip {
     visibility: hidden;
 }
 
-text {
+text, .step {
     font-family: sans-serif;
 }
 
@@ -29,4 +29,14 @@ text {
 
 .tooltip_title {
     font-weight: bold;
+}
+
+.step {
+    font-family: sans-serif;
+    font-size: 14px;
+    background-color: white;
+    opacity: 90%;
+    position: relative;
+    overflow: scroll;
+    margin-bottom: 60%;
 }
