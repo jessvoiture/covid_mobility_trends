@@ -17,6 +17,9 @@ covid_df <- read.csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/
 # dates of US state stay-at-home orders
 sah_dates <- read.csv("state_stay-at-home_orders.csv")
 
+# state codes
+state_abbr <- read.csv("state_abbr.csv")
+
 # constants ---------------------------------------------------------------
 
 # export variables
@@ -35,6 +38,10 @@ find_week <- function(date_of_interest, week_start_day) {
 find_week_V <- Vectorize(find_week)
 
 # data processing ---------------------------------------------------------
+########## STATE ABBREVIATION CODES ########## 
+state_abbr <- state_abbr %>%
+  select(-Abbrev)
+
 ########## STAY AT HOME START DATE DATA ########## 
 sah_dates <- sah_dates %>%
   mutate(date = as.Date(date)) %>%
@@ -150,15 +157,35 @@ df <- df %>%
 ########## PREPARE DF FOR EXPORT ##########
 # CSV 1 = covid cases and mobility by week for US nationally
 us_df <- df %>%
-  filter(region == "US")
-
-write_csv(us_df, us_export_path)
+  filter(region == "US") %>%
+  mutate(month = format(week_start_date, "%b %Y"))
 
 # CSV 2 = date of largest decline in mobility -> sah start date with covid and mobility data BY STATE
-state_df <- df %>%
+state_data <- df %>%
   filter(week_start_date <= sah_start_date &
-           week_start_date >= week_biggest_change_mobility) 
+           week_start_date >= week_biggest_change_mobility) %>%
+  select(region, week_start_date, percent_change, percent_diff, weekly_avg_new_cases, mobility_lockdown_lag_wk)
 
+state_start_data <- state_data %>%
+  group_by(region) %>%
+  top_n(-1, week_start_date) %>%
+  select(-mobility_lockdown_lag_wk)
+
+state_sah_data <- state_data %>%
+  group_by(region) %>%
+  top_n(1, week_start_date) %>%
+  rename_with(.cols = c(week_start_date, percent_change, percent_diff, weekly_avg_new_cases), 
+              .fn = ~ paste0("sah_", .x)) 
+
+state_df <- state_start_data %>%
+  left_join(state_sah_data, by = "region") %>%
+  left_join(state_abbr, by = c("region" = "State"))
+
+
+# EXPORT ------------------------------------------------------------------
+write_csv(us_df, us_export_path)
 write_csv(state_df, state_export_path)
 
 
+df1 <- state_df %>%
+  mutate(log_covid = log(sah_weekly_avg_new_cases, 10))
