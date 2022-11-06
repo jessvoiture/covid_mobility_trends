@@ -1,11 +1,10 @@
-const margin = { top: 20, bottom: 40, left: 40, right: 40 };
+const margin = { top: 20, bottom: 0, left: 30, right: 30 };
 
 const width = 500 - margin.left - margin.right;
 const height = 750 - margin.top - margin.bottom;
+const ratio = width / height;
 
 const num_states = 43; // 43 states with stay at home orders (7 never implemented one)
-const row_space = height / num_states; 
-const row_translate = 8;
 
 const line_width = 2
 
@@ -18,13 +17,8 @@ const div = d3.select("body")
     .style("opacity", 0);
 
 // viz
-const svg = d3.select('.timeline')
+const svg = d3.select('.lag')
     .append('svg')
-    .attr('width', width + margin.left + margin.right)
-    .attr('height', height + margin.top + margin.bottom)
-    .append('g')
-    .attr('transform', `translate(${margin.left},${margin.top})`);
-
 
 d3.csv("https://raw.githubusercontent.com/jessvoiture/covid_mobility_trends/master/csv_files/state_data.csv?version=123").then(function(data, error){
 
@@ -32,180 +26,190 @@ d3.csv("https://raw.githubusercontent.com/jessvoiture/covid_mobility_trends/mast
         console.log("error reading file");
     }
 
-    // sort by the day the stay-at-home (sah) order began
-    data.sort(function(x, y){
-        return d3.ascending(x.sah_week_start_date, y.sah_week_start_date);
-     })
-
-    /* FORMAT DATA TYPES */
-    var parseTime = d3.timeParse("%Y-%m-%d");
-
-    // correct data types
-    data.forEach(function(d) {
-        d.week_start_date = parseTime(d.week_start_date);
-        d.sah_week_start_date = parseTime(d.sah_week_start_date);
-    });
-
-    /* DOMAINS AND AXES */
-    // find x and y domains from data
-    var min_date = d3.min(data, function(d) { return d.week_start_date; });
-    var x_min = d3.timeDay.offset(min_date, -3);
-
-    var max_date = d3.max(data, function(d) { return d.sah_week_start_date; });
-    var x_max = d3.timeDay.offset(max_date, 3);
-
-    var states = data.map(function(d){ return d.Code});
-
-    // x axis
-    var x_scale = d3.scaleTime()		
-        .domain([x_min, x_max])
-        .range([0, width]);
-
-    // top x axis
-    svg.append("g")
-        .attr("class", "x_axis")
-        .call(d3.axisTop(x_scale)
-            .ticks(ticks_unit)
-            .tickFormat(d3.timeFormat("%b %d")))
-
-    // bottom x axis
-    svg.append("g")
-        .attr("class", "x_axis")
-        .call(d3.axisBottom(x_scale)
-            .ticks(ticks_unit)
-            .tickFormat(d3.timeFormat("%b %d")))
-        .attr("transform", "translate(0," + height + ")")
-    
-    // y axis
-    var y_scale = d3.scaleBand()
-        .domain(states)
-        .range([0, height]);
-
-    svg.append("g")
-        .attr("class", "y_axis")
-        .call( d3.axisLeft(y_scale) );
-
-    // assign y-axis labels (the state codes) an id so that their style attributes can be manipulated in mouseover/out events    
-    svg.select(".y_axis")
-        .selectAll("text")
-        .attr("id", function(d, i) { return data[i].Code; });
-
-    /* DOT PLOT */ 
-    // create lines that connect the circles
-    var lines_btwn = svg.selectAll("lines")
-        .data(data)
-        .enter()
-        .append("line")
-        .attr("class", "line_between")
-        .attr("id", function(d) { return d.Code })
-        .attr("x1", function(d) {
-            return x_scale(d.week_start_date);
+    // sets up elements
+    function setup(){
+        // sort by the day the stay-at-home (sah) order began
+        data.sort(function(x, y){
+            return d3.ascending(x.sah_week_start_date, y.sah_week_start_date);
         })
-        .attr("y1", function(d, i) {
-            return i * row_space + row_translate;
-        })
-        .attr("x2", function(d) {
-            return x_scale(d.sah_week_start_date);
-        })
-        .attr("y2", function(d, i) {
-            return i * row_space + row_translate;
-        })
-        .attr("stroke", "gray")
-        .attr("stroke-width", line_width)
-        .attr("opacity", 1)
-        .on("mouseover", onMouseover)
-        .on("mouseout", onMouseout);
 
-    // create the circles for when the state observed its largest decline in mobility (week_start_date)
-    var start_circs = svg.selectAll("circle.start")
-        .data(data)
-        .enter()
-        .append("circle")
-        .attr("class", "start")
-        .attr("id", function(d) { return d.Code; })
-        .attr("cx", function(d) {
-            return x_scale(d.week_start_date);
-        })
-        .attr("cy", function(d, i) {
-            return i * row_space + row_translate;
-        })
-        .attr("r", function(d) {
-            return Math.log(d.weekly_avg_new_cases);
-        })
-        .style("fill", "blue")
-        .on("mouseover", onMouseover) 
-        .on("mouseout", onMouseout);
+        /* FORMAT DATA TYPES */
+        var parseTime = d3.timeParse("%Y-%m-%d");
 
-    // create the circles for when the state imposed a stay-at-home (sah) order (sah_week_start_date)
-    var sah_circs = svg.selectAll("circle.sah")
-        .data(data)
-        .enter()
-        .append("circle")
-        .attr("class", "sah")
-        .attr("id", function(d) { return d.Code; })
-        .attr("cx", function(d) {
-            return x_scale(d.sah_week_start_date);
-        })
-        .attr("cy", function(d, i) {
-            return i * row_space + row_translate;
-        })
-        .attr("r", function(d) {
-            return Math.log(d.sah_weekly_avg_new_cases);
-        })
-        .style("fill", "black")
-        .on("mouseover", onMouseover)
-        .on("mouseout", onMouseout);
-
-    function onMouseover(e, d) {
-        div.transition()
-            .duration(100)
-            .style("opacity", 1);
-
-        var this_id = d3.select(this).attr("id");
-
-        d3.selectAll("circle").attr("opacity", 0.1);
-        d3.selectAll("line").attr("opacity", 0.1);
-        d3.selectAll("text").attr("opacity", 0.1);
-
-        d3.select("text").attr("font-weight", "bold");
-        d3.selectAll("#" + this_id).attr("opacity", 1);
-    }
-
-    function onMouseout() {
-        div.transition()
-            .duration(1000)
-            .style("opacity", 0);
-
-        d3.selectAll("circle").attr("opacity", 1);
-        d3.selectAll("line").attr("opacity", 1);
-        d3.selectAll("text").attr("opacity", 1);
-
-        d3.selectAll("text").attr("font-weight", "normal");
-    }
-
-    // tooltip
-    div
-        // if user hovers on tooltip (and not circle) the tooltip stays visible!
-        .on('mouseover', function(d) {
-            div
-                .transition()
-                .style("opacity", "1");
-        })
-        .on('mouseout', function(d) {
-            div
-                .transition()
-                .duration(200)
-                .style("opacity", "0");
+        // correct data types
+        data.forEach(function(d) {
+            d.week_start_date = parseTime(d.week_start_date);
+            d.sah_week_start_date = parseTime(d.sah_week_start_date);
         });
 
-    /* SCROLL TRIGGERS */
+        /* DOMAINS AND AXES */
+        // find x and y domains from data
+        var min_date = d3.min(data, function(d) { return d.week_start_date; });
+        var x_min = d3.timeDay.offset(min_date, -3);
 
-    // pin timeline in place
+        var max_date = d3.max(data, function(d) { return d.sah_week_start_date; });
+        var x_max = d3.timeDay.offset(max_date, 3);
+
+        var states = data.map(function(d){ return d.Code});
+
+        x_scale = d3.scaleTime()		
+            .domain([x_min, x_max])
+
+        // y axis
+        y_scale = d3.scaleBand()
+            .domain(states)
+
+        /* DOT PLOT */ 
+        // create lines that connect the circles
+        lines_btwn = svg.selectAll("lines")
+            .data(data)
+            .enter()
+            .append("line")
+            .attr("class", "line_between")
+            .attr("id", function(d) { return d.Code })
+            .attr("stroke", "gray")
+            .attr("stroke-width", line_width)
+            .attr("opacity", 1)
+            .on("mouseover", onMouseover)
+            .on("mouseout", onMouseout);
+
+        // create the circles for when the state observed its largest decline in mobility (week_start_date)
+        start_circs = svg.selectAll("circle.start")
+            .data(data)
+            .enter()
+            .append("circle")
+            .attr("class", "start")
+            .attr("id", function(d) { return d.Code; })
+            .style("fill", "blue")
+            .on("mouseover", onMouseover) 
+            .on("mouseout", onMouseout);
+
+        sah_circs = svg.selectAll("circle.sah")
+            .data(data)
+            .enter()
+            .append("circle")
+            .attr("class", "sah")
+            .attr("id", function(d) { return d.Code; })
+            .style("fill", "black")
+            .on("mouseover", onMouseover)
+            .on("mouseout", onMouseout);
+
+        function onMouseover(e, d) {
+            div.transition()
+                .duration(100)
+                .style("opacity", 1);
+    
+            var this_id = d3.select(this).attr("id");
+    
+            d3.selectAll("circle").attr("opacity", 0.1);
+            d3.selectAll("line").attr("opacity", 0.1);
+            d3.selectAll("text").attr("opacity", 0.1);
+    
+            d3.select("text").attr("font-weight", "bold");
+            d3.selectAll("#" + this_id).attr("opacity", 1);
+        }
+    
+        function onMouseout() {
+            div.transition()
+                .duration(1000)
+                .style("opacity", 0);
+    
+            d3.selectAll("circle").attr("opacity", 1);
+            d3.selectAll("line").attr("opacity", 1);
+            d3.selectAll("text").attr("opacity", 1);
+    
+            d3.selectAll("text").attr("font-weight", "normal");
+        }
+    }
+    
+    // sets height and width based on device
+    function resize(){
+        var height = 0.9 * window.innerHeight;   
+        var width = ratio * height;
+
+        svg
+            .attr('width', width)
+            .attr('height', height);
+
+        x_scale.range([0, width - (2 * margin.left)]);
+        y_scale.range([0, height - (margin.top)]);
+
+        // x axis
+        svg.append("g")
+            .attr("class", "x_axis")
+            .call(d3.axisTop(x_scale)
+                .ticks(ticks_unit)
+                .tickFormat(d3.timeFormat("%b %d")))
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        // y axis
+        svg.append("g")
+            .attr("class", "y_axis")
+            .call( d3.axisLeft(y_scale) )
+            .attr('transform', "translate(" + margin.left + "," + margin.top + ")");
+
+        // assign y-axis labels (the state codes) an id so that their style attributes can be manipulated in mouseover/out events    
+        svg.select(".y_axis")
+            .selectAll("text")
+            .attr("id", function(d, i) { return data[i].Code; });
+
+        lines_btwn 
+            .attr("x1", function(d) {
+                return x_scale(d.week_start_date);
+            })
+            .attr("y1", function(d, i) {
+                return y_scale(d.Code);
+            })
+            .attr("x2", function(d) {
+                return x_scale(d.sah_week_start_date);
+            })
+            .attr("y2", function(d, i) {
+                return y_scale(d.Code);
+            })
+            .attr("transform", "translate(" + margin.left + "," + (margin.top + 8) + ")");
+        
+        start_circs
+            .attr("cx", function(d) {
+                return x_scale(d.week_start_date);
+            })
+            .attr("cy", function(d, i) {
+                return y_scale(d.Code);
+            })
+            .attr("r", function(d) {
+                return Math.log(d.weekly_avg_new_cases);
+            })
+            .attr("transform", "translate(" + margin.left + "," + (margin.top + 8) + ")");
+        
+        sah_circs
+            .attr("cx", function(d) {
+                return x_scale(d.sah_week_start_date);
+            })
+            .attr("cy", function(d, i) {
+                return y_scale(d.Code);
+            })
+            .attr("r", function(d) {
+                return Math.log(d.sah_weekly_avg_new_cases);
+            })
+            .attr("transform", "translate(" + margin.left + "," + (margin.top + 8) + ")"); 
+    }
+    
+    // draws everything
+    function init(){
+        setup()
+        resize()
+        ScrollTrigger.refresh();
+        window.addEventListener('resize', resize)
+    }
+    
+    init()
+
+    /* SCROLL TRIGGERS */
+    // pin graph in place
     ScrollTrigger.create({
-        trigger: '.viz-wrapper',
-        endTrigger: '#body_text1',
-        start: 'center center',
-        end: 'top 100%',
+        trigger: '.lag',
+        endTrigger: '#step2',
+        start: 'top 5%', // graph is 90% of vh => 10% / 2 = 5%
+        end: 'bottom -10%',
         pin: true,
         pinSpacing: false
     });
