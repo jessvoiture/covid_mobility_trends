@@ -20,9 +20,10 @@ const div = d3.select("body")
 // viz
 const svg = d3.select('.timeline')
     .append('svg')
-    .attr('width', width + margin.left + margin.right)
-    .attr('height', height + margin.top + margin.bottom)
+    .attr("preserveAspectRatio", "xMinYMin meet")
+    .attr("viewBox", '0 0 1000 1250')
     .append('g')
+    .attr("class", "fig-content")
     .attr('transform', `translate(${margin.left},${margin.top})`);
 
 
@@ -202,7 +203,7 @@ d3.csv("https://raw.githubusercontent.com/jessvoiture/covid_mobility_trends/mast
 
     // pin timeline in place
     ScrollTrigger.create({
-        trigger: '.viz-wrapper',
+        trigger: '.timeline',
         endTrigger: '#body_text1',
         start: 'center center',
         end: 'top 100%',
