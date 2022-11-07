@@ -10,7 +10,7 @@ div.tooltip {
     opacity: 0.7;   
 }
 
-.domain {
+#lag_x_axis > .domain, #lag_y_axis > .domain {
     fill: none;
     stroke: none;
 }
@@ -40,33 +40,45 @@ text {
 }
 
 .body_text {
-    margin-bottom: 2vh;
+    margin-top: 5%;
+    margin-bottom: 5%;
 }
 
 @media screen and (min-width: 900px) {
-    .body_text, .step {
+    .body_text {
       margin-left: 25%;
       margin-right: 25%
+    }
+
+    .step {
+        margin-left: 30%;
+        margin-right: 30%;
     }
 }
 
 @media screen and (max-width: 900px) {
-    .body_text, .step {
+    .body_text {
       margin-left: 3%;
       margin-right: 3%
     }
+
+    .step {
+        margin-left: 10%;
+        margin-right: 10%;
+    }
+    
 }
 
 #step2 {
     margin-bottom: 120vh;
 }
 
-.lag {
+.lag, .us-graph {
     text-align: center;
     justify-content: center;
     align-items: center;
 }
 
-.pin-spacer {
+.pin-spacer, .us-graph {
     margin: 0% !important;
 }
