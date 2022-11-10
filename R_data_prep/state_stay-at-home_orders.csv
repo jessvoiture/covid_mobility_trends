@@ -1,52 +1,52 @@
-state,date
-Alabama,2020-04-04
-Alaska,2020-03-28
-Arizona,2020-03-31
-Arkansas,
-California,2020-03-19
-Colorado,2020-03-26
-Connecticut,2020-03-23
-Delaware,2020-03-24
-Florida,2020-04-02
-Georgia,2020-04-03
-Hawaii,2020-03-25
-Idaho,2020-03-25
-Illinois,2020-03-21
-Indiana,2020-03-24
-Iowa,
-Kansas,2020-03-30
-Kentucky,2020-03-26
-Louisiana,2020-03-23
-Maine,2020-04-02
-Maryland,2020-03-30
-Massachusetts,2020-03-24
-Michigan,2020-03-24
-Minnesota,2020-03-27
-Mississippi,2020-04-03
-Missouri,2020-04-06
-Montana,2020-03-28
-Nebraska,
-Nevada,2020-04-01
-New Hampshire,2020-03-27
-New Jersey,2020-03-21
-New Mexico,2020-03-24
-New York,2020-03-20
-North Carolina,2020-03-30
-North Dakota,
-Ohio,2020-03-23
-Oklahoma,2020-04-01
-Oregon,2020-03-23
-Pennsylvania,2020-04-01
-Rhode Island,2020-03-28
-South Carolina,2020-04-07
-South Dakota,
-Tennessee,2020-03-31
-Texas,2020-04-02
-Utah,
-Vermont,2020-03-24
-Virginia,2020-03-30
-Washington,2020-03-24
-West Virginia,2020-03-24
-Wisconsin,2020-03-25
-Wyoming,
-United States,
+state,date,end_date,governor_party
+Alabama,2020-04-04,2020-04-30,republican
+Alaska,2020-03-28,2020-04-24,republican
+Arizona,2020-03-31,2020-05-15,republican
+Arkansas,,,republican
+California,2020-03-19,2020-08-28,democrat
+Colorado,2020-03-26,2020-04-26,democrat
+Connecticut,2020-03-23,2020-05-20,democrat
+Delaware,2020-03-24,2020-05-31,democrat
+Florida,2020-04-02,2020-05-04,republican
+Georgia,2020-04-03,2020-04-30,republican
+Hawaii,2020-03-25,2020-05-31,democrat
+Idaho,2020-03-25,2020-04-30,republican
+Illinois,2020-03-21,2020-05-29,democrat
+Indiana,2020-03-24,2020-05-01,republican
+Iowa,,,republican
+Kansas,2020-03-30,2020-05-03,democrat
+Kentucky,2020-03-26,2020-06-29,democrat
+Louisiana,2020-03-23,2020-05-15,democrat
+Maine,2020-04-02,2020-05-31,democrat
+Maryland,2020-03-30,2020-05-15,republican
+Massachusetts,2020-03-24,2020-05-18,republican
+Michigan,2020-03-24,2020-06-01,democrat
+Minnesota,2020-03-27,2020-05-17,democrat
+Mississippi,2020-04-03,2020-04-27,republican
+Missouri,2020-04-06,2020-05-03,republican
+Montana,2020-03-28,2020-04-26,republican
+Nebraska,,,republican
+Nevada,2020-04-01,2020-05-15,democrat
+New Hampshire,2020-03-27,2020-06-15,republican
+New Jersey,2020-03-21,2020-06-09,democrat
+New Mexico,2020-03-24,2020-11-30,democrat
+New York,2020-03-20,2020-06-27,democrat
+North Carolina,2020-03-30,2020-05-22,democrat
+North Dakota,,,republican
+Ohio,2020-03-23,2020-05-19,republican
+Oklahoma,2020-04-01,2020-05-06,republican
+Oregon,2020-03-23,2020-06-19,democrat
+Pennsylvania,2020-04-01,2020-06-04,democrat
+Rhode Island,2020-03-28,2020-05-08,democrat
+South Carolina,2020-04-07,2020-05-04,republican
+South Dakota,,,republican
+Tennessee,2020-03-31,2020-04-30,republican
+Texas,2020-04-02,2020-04-30,republican
+Utah,,,republican
+Vermont,2020-03-24,2020-05-15,republican
+Virginia,2020-03-30,2020-05-29,republican
+Washington,2020-03-24,2020-05-31,democrat
+West Virginia,2020-03-24,2020-05-04,republican
+Wisconsin,2020-03-25,2020-05-13,democrat
+Wyoming,,,republican
+United States,,,

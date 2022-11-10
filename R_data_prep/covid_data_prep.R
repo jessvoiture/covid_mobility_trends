@@ -20,12 +20,16 @@ sah_dates <- read.csv("state_stay-at-home_orders.csv")
 # state codes
 state_abbr <- read.csv("state_abbr.csv")
 
+# population size
+pop <- read.csv("census_pop.csv")
+
 # constants ---------------------------------------------------------------
 
 # export variables
 export_path = "~/Documents/School/Resume/2022_08/economist/covid_mobility_trends/csv_files/"
 us_export_path = paste(export_path, "us_ntl_data.csv", sep="")
 state_export_path = paste(export_path, "state_data.csv", sep="")
+lockdown_export_path = paste(export_path, "lockdown_data.csv", sep="")
 
 # functions ---------------------------------------------------------------
 find_week <- function(date_of_interest, week_start_day) {
@@ -45,11 +49,16 @@ state_abbr <- state_abbr %>%
 ########## STAY AT HOME START DATE DATA ########## 
 sah_dates <- sah_dates %>%
   mutate(date = as.Date(date)) %>%
-  rename("sah_start_date" = "date") %>%
+  mutate(end_date = as.Date(end_date)) %>%
+  rename("sah_start_date" = "date",
+         "sah_end_date" = "end_date") %>%
   mutate(sah_day_of_week = case_when(
     is.na(sah_start_date) ~ 1,
     TRUE ~ wday(sah_start_date)
   ))
+
+gov_party <- sah_dates %>%
+  select(state, governor_party)
 
 ########## MOBILITY DATA ##########
 df <- mobility_df %>%
@@ -81,21 +90,21 @@ df <- df %>%
   mutate(week_start_date = as.Date(week_start_date, origin = "1970-01-01"))
 
 df <- df %>%
-  select(region, date_full, year, sah_start_date, sah_day_of_week, week_start_date, contains("percent_change")) %>%
-  pivot_longer(cols = contains("percent_change"), names_to = "category", values_to = "percent_change") %>%
+  select(region, governor_party, date_full, year, sah_start_date, sah_day_of_week, sah_end_date, week_start_date, contains("percent_change")) %>%
+  pivot_longer(cols = contains("percent_change"), names_to = "category", values_to = "pct_change_baseline") %>%
   group_by(region, week_start_date, year) %>%
   # find average percent change over week period
-  summarise(percent_change = mean(percent_change, na.rm = T)) %>%
+  summarise(pct_change_baseline = mean(pct_change_baseline, na.rm = T)) %>%
   ungroup() %>%
   arrange(region, week_start_date) %>%
   group_by(region) %>%
   # percent difference week to week
-  mutate(percent_diff = percent_change - lag(percent_change))
+  mutate(pct_change_wow = pct_change_baseline - lag(pct_change_baseline))
 
 df_day_max_mobility_diff <- df %>%
   filter(week_start_date < as.Date("2020-04-30")) %>%
   group_by(region) %>%
-  slice_min(order_by = percent_diff) %>%
+  slice_min(order_by = pct_change_wow) %>%
   select(region, week_start_date) %>%
   rename("week_biggest_change_mobility" = "week_start_date")
 
@@ -148,6 +157,11 @@ covid_df <- covid_df %>%
   # find average percent change over week period
   summarise(weekly_avg_new_cases = round(mean(new_cases, na.rm = T), 1))
 
+# join to census population data to calc per capita new cases
+covid_df <- covid_df %>%
+  left_join(pop, by="region") %>%
+  mutate(weekly_new_cases_per_100k = weekly_avg_new_cases / population * 100000)
+
 ########## JOIN DATA ##########
 df <- df %>%
   left_join(covid_df, by = c("region", "week_start_date")) %>%
@@ -164,7 +178,7 @@ us_df <- df %>%
 state_data <- df %>%
   filter(week_start_date <= sah_start_date &
            week_start_date >= week_biggest_change_mobility) %>%
-  select(region, week_start_date, percent_change, percent_diff, weekly_avg_new_cases, mobility_lockdown_lag_wk)
+  select(region, week_start_date, pct_change_baseline, pct_change_wow, weekly_avg_new_cases, weekly_new_cases_per_100k, mobility_lockdown_lag_wk)
 
 state_start_data <- state_data %>%
   group_by(region) %>%
@@ -174,18 +188,43 @@ state_start_data <- state_data %>%
 state_sah_data <- state_data %>%
   group_by(region) %>%
   top_n(1, week_start_date) %>%
-  rename_with(.cols = c(week_start_date, percent_change, percent_diff, weekly_avg_new_cases), 
+  rename_with(.cols = c(week_start_date, pct_change_baseline, pct_change_wow, weekly_avg_new_cases, weekly_new_cases_per_100k), 
               .fn = ~ paste0("sah_", .x)) 
 
 state_df <- state_start_data %>%
   left_join(state_sah_data, by = "region") %>%
-  left_join(state_abbr, by = c("region" = "State"))
+  left_join(state_abbr, by = c("region" = "State")) %>%
+  left_join(gov_party, by = c("region" = "state"))
 
+# CSV 3 = group weeks by bool (lockdown?)
+lockdown_df <- df %>%
+  filter(!(is.na(sah_start_date))) %>%
+  filter(week_start_date >= as.Date("2020-04-01") & week_start_date <= as.Date("2020-04-30") |
+           week_start_date >= as.Date("2021-01-07") & week_start_date <= as.Date("2021-01-31") |
+           week_start_date >= as.Date("2021-04-01") & week_start_date <= as.Date("2021-04-30") | 
+           week_start_date >= as.Date("2022-01-07") & week_start_date <= as.Date("2022-01-31")) %>%
+  mutate(lockdown_bool = case_when(
+    week_start_date <= sah_end_date & week_start_date >= sah_start_date ~ TRUE,
+    TRUE ~ FALSE
+    )) %>%
+  mutate(month = format(week_start_date, "%B %Y"))
+  # group_by(region) %>%
+  # mutate(mobility_diff_lockdown = mean_mobility_change - lag(mean_mobility_change))
+
+ggplot(lockdown_df, aes(x = log(weekly_avg_new_cases), 
+                        y = pct_change_baseline, 
+                        color = month,
+                        label = week_start_date)) +
+  geom_point()
+  
+  # geom_label(
+  #   label=paste0(lockdown_df$region), 
+  #   nudge_x = 0.25, nudge_y = 0.25, 
+  #   check_overlap = T
+  # )
 
 # EXPORT ------------------------------------------------------------------
 write_csv(us_df, us_export_path)
 write_csv(state_df, state_export_path)
+write_csv(lockdown_df, lockdown_export_path)
 
-
-df1 <- state_df %>%
-  mutate(log_covid = log(sah_weekly_avg_new_cases, 10))
