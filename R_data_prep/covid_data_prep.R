@@ -136,7 +136,9 @@ covid_df <- union(covid_df, tot_us_cases)
 covid_df <- covid_df %>%
   ungroup() %>%
   group_by(region) %>%
-  mutate(new_cases = tot_cases - lag(tot_cases))
+  mutate(new_cases = tot_cases - lag(tot_cases)) %>%
+  # get rid of rows that show negative new cases (likely due to changes in data collection)
+  filter(new_cases >= 0)
 
 covid_df <- covid_df %>%
   left_join(sah_dates, by = c("region" = "state")) %>%
@@ -200,18 +202,17 @@ state_df <- state_start_data %>%
 lockdown_df <- df %>%
   filter(!(is.na(sah_start_date))) %>%
   filter(week_start_date >= as.Date("2020-04-01") & week_start_date <= as.Date("2020-04-30") |
+           week_start_date >= as.Date("2020-08-01") & week_start_date <= as.Date("2020-08-31") |
            week_start_date >= as.Date("2021-01-07") & week_start_date <= as.Date("2021-01-31") |
-           week_start_date >= as.Date("2021-04-01") & week_start_date <= as.Date("2021-04-30") | 
-           week_start_date >= as.Date("2022-01-07") & week_start_date <= as.Date("2022-01-31")) %>%
+           week_start_date >= as.Date("2021-04-01") & week_start_date <= as.Date("2021-04-30")) %>%
   mutate(lockdown_bool = case_when(
     week_start_date <= sah_end_date & week_start_date >= sah_start_date ~ TRUE,
     TRUE ~ FALSE
     )) %>%
-  mutate(month = format(week_start_date, "%B %Y"))
-  # group_by(region) %>%
-  # mutate(mobility_diff_lockdown = mean_mobility_change - lag(mean_mobility_change))
+  mutate(month = format(week_start_date, "%B %Y")) %>%
+  mutate(log_cases = log(weekly_new_cases_per_100k))
 
-ggplot(lockdown_df, aes(x = log(weekly_avg_new_cases), 
+ggplot(lockdown_df, aes(x = log(weekly_new_cases_per_100k), 
                         y = pct_change_baseline, 
                         color = month,
                         label = week_start_date)) +

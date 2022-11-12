@@ -1,13 +1,35 @@
 const margin = { top: 20, bottom: 0, left: 30, right: 30 };
 const num_states = 43; // 43 states with stay at home orders (7 never implemented one)
 const line_width = 2 // lines connecting dots
-const week_filter = 27; // how many weeks to include on area chart / heatmap
+const week_filter = 20; // how many weeks to include on area chart / heatmap
+const lable_type_size = 8; // type size of axis labels
+
+// colors
+const light_green = "#E6F6D7"
+const med_green = "#C1DAB0";
+const dark_green = "#1D5902"
+const light_pink = "#F8D7EB";
+const med_pink = "#D9A4C5";
+const dark_pink = "#B55997";
+const grey = "#DBDBDB";
+
+// covid milestones
+const milestones = [
+    { Name: 'WHO declares pandemic', milestone_date: "2020-03-11" },
+    { Name: 'US records first COVID death', milestone_date: "2020-02-06" },
+    { Name: 'More than 80,000 confirmed cases', milestone_date: "2020-03-27"} 
+];
 
 // tooltip
 const div = d3.select("body")
     .append("div")
     .attr("class", "tooltip")
     .style("opacity", 0);
+
+// color scale for scatter plot
+const colScale = d3.scaleOrdinal()
+    .range([dark_green, dark_pink, med_pink, light_pink])
+    .domain(["April 2020", "August 2020", "January 2021", "April 2021"]);
 
 // viz
 const svg_state = d3.select('.lag')
@@ -16,10 +38,14 @@ const svg_state = d3.select('.lag')
 const svg_us = d3.select('.us-graph')
     .append('svg')
 
+const svg_scatter = d3.select('.scatter')
+    .append('svg')
+
 Promise.all([
         
     d3.csv("https://raw.githubusercontent.com/jessvoiture/covid_mobility_trends/master/csv_files/state_data.csv?version=123"),
-    d3.csv("https://raw.githubusercontent.com/jessvoiture/covid_mobility_trends/master/csv_files/us_ntl_data.csv?version=123")])
+    d3.csv("https://raw.githubusercontent.com/jessvoiture/covid_mobility_trends/master/csv_files/us_ntl_data.csv?version=123"),
+    d3.csv("https://raw.githubusercontent.com/jessvoiture/covid_mobility_trends/master/csv_files/lockdown_data.csv?version=123")])
     .then(function(data, error){
 
         if (error) {
@@ -28,22 +54,28 @@ Promise.all([
 
         state_data = data[0];
         us_data = data[1]
+        scatter_data = data[2];
 
-        // sets up elements
+// SETUP
+// initiates elements
         function setup(){
             /* FORMAT DATA TYPES */
             var parseTime = d3.timeParse("%Y-%m-%d");
             
     /* STATE TIMELINE */
-            // sort by the day the stay-at-home (sah) order began
+            // sort by lag time and the day the stay-at-home (sah) order began
             state_data.sort(function(x, y){
-                return d3.ascending(x.sah_week_start_date, y.sah_week_start_date);
+                return d3.ascending(x.mobility_lockdown_lag_wk, y.mobility_lockdown_lag_wk) ||
+                d3.ascending(x.sah_week_start_date, y.sah_week_start_date);
             })
 
             // correct data types
             state_data.forEach(function(d) {
                 d.week_start_date = parseTime(d.week_start_date);
                 d.sah_week_start_date = parseTime(d.sah_week_start_date);
+                d.pct_change_baseline = +d.pct_change_baseline;
+                d.log_weekly_new_cases = Math.log(d.weekly_avg_new_cases);
+                d.sah_log_weekly_new_cases = Math.log(d.sah_weekly_avg_new_cases);
             });
 
             /* DOMAINS AND AXES */
@@ -56,105 +88,213 @@ Promise.all([
 
             var states = state_data.map(function(d){ return d.Code});
 
+            // x axis
             x_scale = d3.scaleTime()		
                 .domain([x_min, x_max])
 
             // y axis
             y_scale = d3.scaleBand()
                 .domain(states)
+            
+            // x axis grid lines
+            x_axis_grid = svg_state
+                .append("g")			
+                .attr("class", "grid")
 
-            /* DOT PLOT */ 
             // create lines that connect the circles
-            lines_btwn = svg_state.selectAll("lines")
+            lines_btwn = svg_state
+                .append("g")
+                .attr("class", "lines_btwn_circs_g")
+                .selectAll(null)
                 .data(state_data)
                 .enter()
                 .append("line")
                 .attr("class", "line_between")
                 .attr("id", function(d) { return d.Code })
-                .attr("stroke", "gray")
+                .attr("stroke", grey)
                 .attr("stroke-width", line_width)
                 .attr("opacity", 1)
                 .on("mouseover", onMouseover)
                 .on("mouseout", onMouseout);
 
             // create the circles for when the state observed its largest decline in mobility (week_start_date)
-            start_circs = svg_state.selectAll("circle.start")
+            start_circs = svg_state
+                .append("g")
+                .attr("class", "start_circ_g")
+                .selectAll(null)
                 .data(state_data)
                 .enter()
                 .append("circle")
                 .attr("class", "start")
                 .attr("id", function(d) { return d.Code; })
-                .style("fill", "blue")
+                .style("fill", med_pink)
                 .on("mouseover", onMouseover) 
                 .on("mouseout", onMouseout);
 
             // create the circles for when the state imposed stay-at-home order
-            sah_circs = svg_state.selectAll("circle.sah")
+            sah_circs = svg_state
+                .append("g")
+                .attr("class", "sah_circ_g")
+                .selectAll(null)
                 .data(state_data)
                 .enter()
                 .append("circle")
                 .attr("class", "sah")
                 .attr("id", function(d) { return d.Code; })
-                .style("fill", "black")
+                .style("fill", dark_green)
                 .on("mouseover", onMouseover)
                 .on("mouseout", onMouseout);
 
-            function onMouseover(e, d) {
-                div.transition()
-                    .duration(100)
-                    .style("opacity", 1);
-        
-                var this_id = d3.select(this).attr("id");
-        
-                d3.selectAll("circle").attr("opacity", 0.1);
-                d3.selectAll("line").attr("opacity", 0.1);
-                d3.selectAll("text").attr("opacity", 0.1);
-        
-                d3.select("text").attr("font-weight", "bold");
-                d3.selectAll("#" + this_id).attr("opacity", 1);
-            }
-        
-            function onMouseout() {
-                div.transition()
-                    .duration(1000)
-                    .style("opacity", 0);
-        
-                d3.selectAll("circle").attr("opacity", 1);
-                d3.selectAll("line").attr("opacity", 1);
-                d3.selectAll("text").attr("opacity", 1);
-        
-                d3.selectAll("text").attr("font-weight", "normal");
-            }
-
     /* US NATIONAL GRAPH */
+            milestones.forEach(function(d) {
+                d.milestone_date = parseTime(d.milestone_date);
+            })
+
+            console.log(milestones);
+
             us_data = us_data.filter(function(d, i) {return i < week_filter});
             
             us_data.forEach(function(d) {
                 d.week_start_date = parseTime(d.week_start_date);
                 d.weekly_avg_new_cases = +d.weekly_avg_new_cases;
+                d.pct_change_baseline = +d.pct_change_baseline;
             });
 
             us_data.sort(function(x, y){
                 return d3.ascending(x.week_start_date, y.week_start_date);
             })
 
-            heatmap_col_scale = d3.scaleLinear()
-                .domain([-50, 6])
-                .range(["blue", "white"]);
+            var max_covid_cases = d3.max(us_data, function(d) { return d.weekly_avg_new_cases; });
 
+        // covid cases line and area chart
+
+            x_scale_us = d3.scaleTime()		
+                .domain(d3.extent(us_data, function(d) { return d.week_start_date; }));
+
+            y_scale_cases = d3.scaleLinear()
+                // 1000 = a little padding at the top
+                .domain([0, (max_covid_cases + 1000)]);
+
+            // y axis label
+            svg_us.append("text")
+                .attr("class", "y_label")
+                .attr("text-anchor", "end")
+                .attr("y", lable_type_size)
+                .attr("x", -10)
+                .attr("transform", "rotate(-90)")
+                .text("Weekly New Covid Cases");
+
+            // area chart for covid cases
+            cases_area = svg_us
+                .append("g")
+                .attr("class", "cases_area")
+                .append("path")
+                .data([us_data])
+                .attr("class", "area_chart")
+                .attr("fill", dark_green)
+                .attr("opacity", 0.3)
+                .attr("stroke", "none");
+
+            cases_line = svg_us
+                .append("g")
+                .attr("class", "cases_line")
+                .append("path")
+                .data([us_data])
+                .attr("class", "line_chart")
+                .attr("fill", "none")
+                .attr("stroke", dark_green)
+                .attr("stroke-width", line_width);
+
+        // change in mobility line and area chart
+
+            var max_pct_change_baseline = d3.max(us_data, function(d) { return d.pct_change_baseline; });
+            var min_pct_change_baseline = d3.min(us_data, function(d) { return d.pct_change_baseline; });
+
+            console.log(d3.extent(us_data, function(d) { return d.pct_change_baseline; }));
+            y_scale_mobility = d3.scaleLinear()
+                .domain([(min_pct_change_baseline - 5), (max_pct_change_baseline + 5)]);  
+
+            // y axis label
+            y_mobility_label = svg_us.append("text")
+                .attr("class", "y_label")
+                .attr("text-anchor", "end")
+                .attr("y", lable_type_size) 
+                .attr("transform", "rotate(-90)")
+                .text("Change in Mobility from Baseline (%)");
+
+            // area chart for covid cases
+            mobility_area = svg_us
+                .append("g")
+                .attr("class", "mobility_area")
+                .append("path")
+                .data([us_data])
+                .attr("class", "area_chart")
+                .attr("fill", med_pink)
+                .attr("opacity", 0.3)
+                .attr("stroke", "none");
+
+            mobility_line = svg_us
+                .append("g")
+                .attr("class", "mobility_line")
+                .append("path")
+                .data([us_data])
+                .attr("class", "line_chart")
+                .attr("fill", "none")
+                .attr("stroke", med_pink)
+                .attr("stroke-width", line_width);
+
+    /* SCATTERPLOT! */
+            scatter_data.forEach(function(d) {
+                d.weekly_new_cases_per_100k = +d.weekly_new_cases_per_100k
+                d.pct_change_baseline = +d.pct_change_baseline
+                d.log_weekly_cases_per_100k = Math.log(d.weekly_new_cases_per_100k)
+            });
+
+            // x axis
+            x_scale_scatter = d3.scaleLinear()
+                .domain(d3.extent(scatter_data, function(d) { return d.log_weekly_cases_per_100k; }));
+
+            // y axis
+            y_scale_scatter = d3.scaleLinear()
+                .domain(d3.extent(scatter_data, function(d) { return d.pct_change_baseline; }));
+
+            scatter_dots = svg_scatter
+                .append("g")
+                .attr("class", "scatter_dots")
+                .selectAll(null)
+                .data(scatter_data)
+                .enter()
+                .append("circle")
+                .attr("class", "scatter_circ")
+                .attr("id", function(d){ return "circ_" + d.month.replaceAll(' ', '')})
+                .attr("r", 3)
+                .style("fill", function(d) { return colScale(d.month) });
+
+            // checkboxes
+            d3.selectAll(".checkbox").on("change", function() {
+                var selected = this.value;
+                opacity = this.checked ? 1 : 0;
+            
+            svg_scatter.selectAll(".scatter_circ")
+                .filter(function(d) {return selected == d.month.replaceAll(' ', '');})
+                .transition()
+                .duration(250)
+                .style("opacity", opacity);
+                }); 
         }
-        
-        // sets height and width based on device
+
+// RESIZE
+// sets height and width based on device
         function resize(){
             screen_height = window.innerHeight;   
             screen_width = window.innerWidth;
 
     /* STATE DATA */ 
-            state_height = screen_height *  0.9;
+            state_height = (screen_height *  0.80);
 
             // desktop set up
             if (screen_width > 900) {
-                state_width = screen_width / 2; 
+                state_width = screen_width * 0.44; 
                 ticks_unit = d3.timeDay.every(4);
             // mobile set up
             } else {
@@ -162,16 +302,17 @@ Promise.all([
                 ticks_unit = d3.timeDay.every(7);
              }
 
+            function make_state_x_gridlines() {		
+                return d3.axisBottom(x_scale)
+                    .ticks(ticks_unit)
+            }
+
             svg_state
                 .attr('width', state_width)
                 .attr('height', state_height);
 
             x_scale.range([0, state_width - (2 * margin.left)]);
             y_scale.range([0, state_height - (margin.top)]);
-
-            var min_start_date = d3.min(state_data, function(d) { return d.week_start_date; });
-            var max_start_date = d3.max(state_data, function(d) { return d.week_start_date; });
-            var start_date_range = max_start_date - min_start_date;
 
             // x axis
             svg_state.append("g")
@@ -181,6 +322,15 @@ Promise.all([
                     .ticks(ticks_unit)
                     .tickFormat(d3.timeFormat("%b %d")))
                     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+            // add x gridlines
+            x_axis_grid
+                .attr("transform", "translate(" + margin.left + "," + state_height + ")")
+                .call(make_state_x_gridlines()
+                    .tickSize(-(state_height - margin.top))
+                    .tickFormat("")
+                    .tickSizeOuter(0)
+                )
 
             // y axis
             svg_state.append("g")
@@ -217,7 +367,7 @@ Promise.all([
                     return y_scale(d.Code);
                 })
                 .attr("r", function(d) {
-                    return Math.log(d.weekly_avg_new_cases);
+                    return d.log_weekly_new_cases;
                 })
                 .attr("transform", "translate(" + margin.left + "," + (margin.top + 8) + ")");
             
@@ -229,19 +379,16 @@ Promise.all([
                     return y_scale(d.Code);
                 })
                 .attr("r", function(d) {
-                    return Math.log(d.sah_weekly_avg_new_cases);
+                    return d.sah_log_weekly_new_cases;
                 })
                 .attr("transform", "translate(" + margin.left + "," + (margin.top + 8) + ")"); 
 
-     /* US LINE GRAPH DATA */
-            var max_covid_cases = d3.max(us_data, function(d) { return d.weekly_avg_new_cases; });
-            max_covid_cases = max_covid_cases;
-
+    /* US LINE GRAPH DATA */
             us_height = screen_height / 2;
 
             // desktop set up
             if (screen_width > 900) {
-                us_width = screen_width / 2; 
+                us_width = screen_width / 1.7; 
             // mobile set up
             } else {
                 us_width = screen_width * 0.9;
@@ -251,180 +398,181 @@ Promise.all([
                 .attr('width', us_width)
                 .attr('height', us_height);
 
-            var area_height = (us_height * 0.80) - margin.top;
-            var heatmap_start_height = area_height + 40;
-
-            var cell_width = (us_width - 1.5 * margin.left) / week_filter;
-            var cell_height = 2 * cell_width;
+            var cases_height = (us_height * .475) - margin.top;
+            var mobility_start_height = us_height * 0.525;
 
             // x axis
-            x_scale_us = d3.scaleTime()		
-                .domain(d3.extent(us_data, function(d) { return d.week_start_date; }))
+            x_scale_us
                 // 1.5 * margin.left so there is space for y axis label
-                .range([1.5 * margin.left, us_width]);
-
+                .range([(1.5 * margin.left + 3), us_width]);
+            
+        // area chart for covid cases
             // y axis
-            y_scale_us = d3.scaleLinear()
-                .domain([0, max_covid_cases])
-                .range([area_height, 0]);
+            y_scale_cases
+                .range([cases_height, 0]);
 
             // x axis
             svg_us.append("g")
                 .attr("class", "x_axis")
                 .call(d3.axisBottom(x_scale_us)
-                    .ticks(5)      
-                    .tickFormat(d3.timeFormat("%b %Y")))
-                .attr("transform", "translate(" + (1.5 * margin.left) + "," + area_height + ")");
+                    .ticks(3)      
+                    .tickFormat(d3.timeFormat("%b %Y"))
+                    .tickSizeOuter(0)
+                    .tickPadding(0.025 * us_height))
+                .attr("transform", "translate(" + 0 + "," + cases_height + ")");
 
             // y axis
             svg_us.append("g")
                 .attr("class", "y_axis")
-                .call( d3.axisLeft(y_scale_us) 
-                    .ticks(5)
-                    .tickFormat(d3.format(".0s")))
+                .attr("id", "cases_y_axis")
+                .call( d3.axisLeft(y_scale_cases) 
+                    .ticks(3)
+                    .tickFormat(d3.format(".0s"))
+                    .tickSizeOuter(0)
+                    .tickPadding(-0.005 * us_height))
                 .attr("transform", "translate(" + (1.5 * margin.left + 3) + "," + 0 + ")");
 
-            // y axis label
-            svg_us.append("text")
-                .attr("class", "y_label")
-                .attr("text-anchor", "end")
-                .attr("y", 6)
-                .attr("dy", ".75em")
-                .attr("transform", "rotate(-90)")
-                .text("Weekly Average New Covid Cases");
-
-            // area chart for covid cases
-            line_chart_area = svg_us.append("path")
-                .data([us_data])
-                .attr("class", "line_graph")
-                .attr("fill", "red")
-                .attr("fill-opacity", .3)
-                .attr("stroke", "none")
+            cases_area 
                 .attr("d", d3.area()
                     .x(function(d) { return x_scale_us(d.week_start_date) })
-                    .y0( area_height )
-                    .y1(function(d) { return y_scale_us(d.weekly_avg_new_cases)})
-                    )
+                    .y0( cases_height )
+                    .y1(function(d) { return y_scale_cases(d.weekly_avg_new_cases)})
+                    );
 
             // line for area chart
-            line_graph_path = svg_us.append("path")
-                .data([us_data])
-                .attr("class", "line")
-                .attr("fill", "none")
-                .attr("stroke", "red")
-                .attr("stroke-width", line_width)
+            cases_line
                 .attr("d", d3.line()
                     .x(function(d) { return x_scale_us(d.week_start_date) })
-                    .y(function(d) { return y_scale_us(d.weekly_avg_new_cases)})
-                    )
-            
-            // heat map of mobility
-            heatmap = svg_us.selectAll(null)
-                .data(us_data)
-                .enter()
-                .append('rect')
-                .attr('class', 'heatmap_cell')
-                .attr('width', cell_width)
-                .attr('height', cell_height)
-                .attr('y', heatmap_start_height)
-                .attr('x', function(d) { return x_scale_us(d.week_start_date); })
-                .attr('fill', function(d) { return heatmap_col_scale(d.percent_change); });
+                    .y(function(d) { return y_scale_cases(d.weekly_avg_new_cases)})
+                    );
+
+        // area chart for mobility change
+            // y axis
+            y_scale_mobility
+                .range([(us_height - margin.top), mobility_start_height]);
+
+            y_mobility_label
+                .attr("x", -(mobility_start_height - 5))
+
+            mobility_area  
+                .attr("d", d3.area()
+                    .x(function(d) { return x_scale_us(d.week_start_date) })
+                    .y0( mobility_start_height )
+                    .y1(function(d) { return y_scale_mobility(d.pct_change_baseline)})
+                    );
+
+            // line for area chart
+            mobility_line
+                .attr("d", d3.line()
+                    .x(function(d) { return x_scale_us(d.week_start_date) })
+                    .y(function(d) { return y_scale_mobility(d.pct_change_baseline)})
+                    );
+
+            // x axis
+            svg_us.append("g")
+                .attr("class", "x_axis_mobility")
+                .call(d3.axisBottom(x_scale_us)
+                    .ticks(0)      
+                    .tickSizeOuter(0))
+                .attr("transform", "translate(" + 0 + "," + mobility_start_height + ")");
+
+            // y axis
+            svg_us.append("g")
+                .attr("class", "y_axis")
+                .attr("id", "mobility_y_axis")
+                .call( d3.axisLeft(y_scale_mobility) 
+                    .ticks(3)
+                    .tickFormat(d => d + "%")
+                    .tickSizeOuter(0)
+                    .tickPadding(-0.005 * us_height))
+                .attr("transform", "translate(" + (1.5 * margin.left + 3) + "," + 0 + ")");
+
+    /* US LINE GRAPH DATA */
+             // desktop set up
+            if (screen_width > 900) {
+                scatter_width = screen_width / 1.7; 
+            // mobile set up
+            } else {
+                scatter_width = screen_width * 0.9;
+             }
+
+            scatter_height = 0.6 * screen_height;
+
+            svg_scatter
+                .attr('width', scatter_width)
+                .attr('height', scatter_height);
+
+            x_scale_scatter.range([0, scatter_width - (2 * margin.left)]);
+            y_scale_scatter.range([scatter_height - (margin.top), 0]);
+    
+            // x axis
+            svg_scatter.append("g")
+                .attr("class", "x_axis")
+                .attr("id", "scatter_x_axis")
+                .call(d3.axisBottom(x_scale_scatter)
+                        .ticks(5)
+                        .tickSizeOuter(0))
+                .attr("transform", "translate(" + margin.left + "," + (scatter_height - margin.top) + ")");
+
+            // y axis
+            svg_scatter.append("g")
+                .attr("class", "y_axis")
+                .attr("id", "scatter_y_axis")
+                .call( d3.axisLeft(y_scale_scatter)
+                        .tickSizeOuter(0) )
+                .attr('transform', "translate(" + margin.left + "," + 0 + ")");
+
+            scatter_dots
+                .attr("cx", function (d) { 
+                    return x_scale_scatter(d.log_weekly_cases_per_100k); })
+                .attr("cy", function (d) { 
+                    return y_scale_scatter(d.pct_change_baseline); } )
+
+
         }
-        
-        // draws everything
+
+// INIT
+// draws everything
         function init(){
             setup()
             resize()
             ScrollTrigger.refresh();
-            window.addEventListener('resize', resize)
+            //window.addEventListener('resize', resize)
         }
         
         init()
 
-    /* SCROLL TRIGGERS FOR TIMELINE */
-        // pin graph in place
-        ScrollTrigger.create({
-            trigger: '.lag',
-            endTrigger: '#step2',
-            start: 'top 5%', // graph is 90% of vh => 10% / 2 = 5%
-            end: 'bottom -10%',
-            pin: true,
-            pinSpacing: false
-        });
+// FUNCTIONS
+    /* ADD GRID LINES */
         
-        // highlight the week with the biggest mobility drop (start_circ)
-        ScrollTrigger.create({
-            trigger: '#step1',
-            start: 'bottom 90%', // start when the bottom of the trigger hits 90% down from the top of the viewport
-            onEnter: highlight_start_circ,
-            onEnterBack: highlight_start_circ,
-            onLeave: highlight_sah_circ,
-            onLeaveBack: full_opacity_everything,
-            markers: false,
-            id: 'highlight_start_circ'
-            });
+   
 
-        // highlight the week when the stay at home order started (sah_circ)
-        ScrollTrigger.create({
-            trigger: '#step2',
-            start: 'bottom 70%', // start when the bottom of the trigger hits 70% down from the top of the viewport
-            onEnter: highlight_sah_circ,
-            onEnterBack: highlight_sah_circ,
-            onLeave: full_opacity_everything,
-            onLeaveBack: highlight_start_circ,
-            markers: false,
-            id: 'highlight_sah_circ'
-            });
-
-        function highlight_start_circ() {
-            start_circs
-                .transition()
-                .duration(500)
+    /* MOUSEOVER FUNCTION */
+        function onMouseover(e, d) {
+            div.transition()
+                .duration(100)
                 .style("opacity", 1);
-
-            sah_circs
-                .transition()
-                .duration(500)
-                .style("opacity", 0.1);
-
-            lines_btwn
-                .transition()
-                .duration(500)
-                .style("opacity", 0.1);
-            }
-
-        function highlight_sah_circ() {
-            start_circs
-                .transition()
-                .duration(500)
-                .style("opacity", 0.1);
-
-            sah_circs
-                .transition()
-                .duration(500)
-                .style("opacity", 1);
-
-            lines_btwn
-                .transition()
-                .duration(500)
-                .style("opacity", 0.1);
-            }
-
-        function full_opacity_everything() {
-            start_circs
-                .transition()
-                .duration(500)
-                .style("opacity", 1);
-
-            sah_circs
-                .transition()
-                .duration(500)
-                .style("opacity", 1);
-
-            lines_btwn
-                .transition()
-                .duration(500)
-                .style("opacity", 1);
+    
+            var this_id = d3.select(this).attr("id");
+    
+            d3.selectAll("circle").attr("opacity", 0.1);
+            d3.selectAll("line").attr("opacity", 0.1);
+            d3.selectAll("text").attr("opacity", 0.1);
+    
+            d3.select("text").attr("font-weight", "bold");
+            d3.selectAll("#" + this_id).attr("opacity", 1);
+        }
+    
+        function onMouseout() {
+            div.transition()
+                .duration(1000)
+                .style("opacity", 0);
+    
+            d3.selectAll("circle").attr("opacity", 1);
+            d3.selectAll("line").attr("opacity", 1);
+            d3.selectAll("text").attr("opacity", 1);
+    
+            d3.selectAll("text").attr("font-weight", "normal");
         }
 
     })
