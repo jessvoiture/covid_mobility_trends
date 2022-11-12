@@ -218,11 +218,6 @@ ggplot(lockdown_df, aes(x = log(weekly_new_cases_per_100k),
                         label = week_start_date)) +
   geom_point()
   
-  # geom_label(
-  #   label=paste0(lockdown_df$region), 
-  #   nudge_x = 0.25, nudge_y = 0.25, 
-  #   check_overlap = T
-  # )
 
 # EXPORT ------------------------------------------------------------------
 write_csv(us_df, us_export_path)
