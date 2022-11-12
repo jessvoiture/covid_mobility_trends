@@ -9,47 +9,72 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
+    <div class="title">
+        <div class="header">Top Down or Bottom Up</div>
+        <div class="byline">Voluntary versus governmental responses to COVID-19 and their effect on mobility trends</div>
+    </div>
+
     <div class="body_text">
-        More words
+        <a target="_blank" href=”https://www.google.com/covid19/mobility/”>Google’s mobility trends</a> track how visits and length of stay at different places change compared to a baseline period (January 3, 2020 to February 6, 2020) and thus provide insight into some of the ways human behavior and travel patterns changed as a result of the pandemic. 
+    </div>
+
+    <div class="body_text">
+        As the scale and geographic reach of the pandemic swelled in the early months of 2020, mobility and travel tandemly contracted. Mobility to workplaces, retail and recreational places, and transit are all observed drastic reductions as stores closed and people shifted to online school and work.
     </div>
 
     <!-- mobility vs cases graph -->
+    <div class="graph_title_container">
+        <div class="graph_title" id="us_title">Effect of Rising Covid Cases on Mobility</div>
+        <div class="graph_byline" id="us_byline">Weekly new covid cases and decrease in mobility from baseline for the first wave of Covid</div>
+    </div>
     <figure class="us-graph"></figure>
-    <figure class="heatmap"></figure>
 
     <div class="body_text">
-        Unlike many other countries (and in true American fashion) there was no federally-imposed lockdown. Instead, stay-at-home orders and other health measures were at the discretion of state governors, leading to a mosaic of mobility restrictions and variation in when these policies were imposed. 
+        As the early months of the pandemic unfolded communities and individuals may have responded to the global trend of the pandemic by self-regulating their mobility—far outpacing health guidelines or policy restrictions. Unlike many countries (and in true American fashion), the US did not impose a nation-wide lockdown. Instead, <a target="_blank" href="https://ballotpedia.org/Status_of_lockdown_and_stay-at-home_orders_in_response_to_the_coronavirus_(COVID-19)_pandemic,_2020">stay-at-home orders</a> and other health measures were at the discretion of state governors, leading to a mosaic of mobility restrictions and variation in when these policies were imposed. The devolution of public health decisions engendered a partisan divide in responses, with many states headed by Republican leadership resisting stringent policies and comprehensive lockdowns.
     </div>
 
     <!-- state by state timeline of stay at home orders -->
+    <div class="graph_title_container">
+        <div class="graph_title" id="lag_title">Lag in community and state responses</div>
+        <div class="graph_byline" id="lag_byline">Time lag between the week a state observed the <span class="mobility_week_highlight">largest drop in mobility</span> and the week <span class="sah_week_highlight">the stay-at-home order</span> commenced.</div>
+    </div>
     <figure class="lag"></figure>
 
-    <!-- scroll trigger steps -->
-    <div class="step" id="step1">
-        This will highlight the weeks with the greatest drop in mobility.
+    <div class="body_text">
+        I'm baby affogato four dollar toast skateboard unicorn tumblr la croix mukbang. Dreamcatcher raw denim wolf, four loko tumeric squid lo-fi williamsburg chambray mustache gatekeep vaporware. Tumeric gochujang poke, ramps kitsch succulents hammock DIY franzen irony truffaut YOLO pour-over selvage. Humblebrag sustainable bespoke raclette. Etsy VHS retro Brooklyn.
+        Lo-fi roof party normcore, readymade XOXO yuccie VHS listicle helvetica four dollar toast. Blue bottle cliche etsy flannel la croix raclette adaptogen flexitarian ascot pabst big mood pug trust fund. Kale chips tofu sartorial cliche. Glossier squid austin pug, lo-fi polaroid chicharrones actually tonx. Narwhal four loko lo-fi pop-up, polaroid unicorn copper mug yuccie. Shaman meh offal whatever tilde locavore mlkshk banh mi fashion axe sartorial ethical vexillologist. Affogato Brooklyn hammock you probably haven't heard of them meditation.
+        Normcore everyday carry wayfarers tonx pabst freegan bruh. Roof party godard pok pok fashion axe selvage. Meggings cold-pressed bruh celiac mustache deep v. Gatekeep chia hexagon 90's man braid iceland adaptogen sustainable 3 wolf moon truffaut four loko bespoke craft beer. Typewriter bruh yuccie drinking vinegar.
+        Mustache ennui occupy pok pok 90's fashion axe fixie fingerstache banjo cloud bread. Chia readymade af scenester authentic semiotics fashion axe selvage etsy pop-up pitchfork. Street art ethical venmo, ascot dreamcatcher pug squid glossier 3 wolf moon biodiesel. Cliche unicorn biodiesel drinking vinegar fanny pack woke kombucha. Thundercats flexitarian live-edge narwhal vinyl irony.
+        I'm baby affogato four dollar toast skateboard unicorn tumblr la croix mukbang. Dreamcatcher raw denim wolf, four loko tumeric squid lo-fi williamsburg chambray mustache gatekeep vaporware. Tumeric gochujang poke, ramps kitsch succulents hammock DIY franzen irony truffaut YOLO pour-over selvage. Humblebrag sustainable bespoke raclette. Etsy VHS retro Brooklyn.
+        Lo-fi roof party normcore, readymade XOXO yuccie VHS listicle helvetica four dollar toast. Blue bottle cliche etsy flannel la croix raclette adaptogen flexitarian ascot pabst big mood pug trust fund. Kale chips tofu sartorial cliche. Glossier squid austin pug, lo-fi polaroid chicharrones actually tonx. Narwhal four loko lo-fi pop-up, polaroid unicorn copper mug yuccie. Shaman meh offal whatever tilde locavore mlkshk banh mi fashion axe sartorial ethical vexillologist. Affogato Brooklyn hammock you probably haven't heard of them meditation.
+        Normcore everyday carry wayfarers tonx pabst freegan bruh. Roof party godard pok pok fashion axe selvage. Meggings cold-pressed bruh celiac mustache deep v. Gatekeep chia hexagon 90's man braid iceland adaptogen sustainable 3 wolf moon truffaut four loko bespoke craft beer. Typewriter bruh yuccie drinking vinegar.
+        Mustache ennui occupy pok pok 90's fashion axe fixie fingerstache banjo cloud bread. Chia readymade af scenester authentic semiotics fashion axe selvage etsy pop-up pitchfork. Street art ethical venmo, ascot dreamcatcher pug squid glossier 3 wolf moon biodiesel. Cliche unicorn biodiesel drinking vinegar fanny pack woke kombucha. Thundercats flexitarian live-edge narwhal vinyl irony.
     </div>
 
-    <div class="step" id="step2">
-        This will highlight the week where the lockdown started.
+    <!-- lockdown vs not lockdown scatterplot -->
+    <div class="graph_title_container">
+        <div class="graph_title" id="scatter_title">Mobility and Covid Cases for Different Waves</div>
+        <div class="graph_byline" id="scatter_byline"></div>
+    </div>
+    
+    <!-- buttons -->
+    <div class="checkboxes">
+        <input type="checkbox" class="checkbox" id="cb2008" value="August2020" checked>
+        <label>August 2020</label>
+
+        <input type="checkbox" class="checkbox" id="cb2101" value="January2021" checked>
+        <label>January 2021</label>
+
+        <input type="checkbox" class="checkbox" id="cb2104" value="April2021" checked>
+        <label>April 2021</label>
     </div>
 
-    <div class="body_text" id="body_text1">
-        I'm baby affogato four dollar toast skateboard unicorn tumblr la croix mukbang. Dreamcatcher raw denim wolf, four loko tumeric squid lo-fi williamsburg chambray mustache gatekeep vaporware. Tumeric gochujang poke, ramps kitsch succulents hammock DIY franzen irony truffaut YOLO pour-over selvage. Humblebrag sustainable bespoke raclette. Etsy VHS retro Brooklyn.
-        Lo-fi roof party normcore, readymade XOXO yuccie VHS listicle helvetica four dollar toast. Blue bottle cliche etsy flannel la croix raclette adaptogen flexitarian ascot pabst big mood pug trust fund. Kale chips tofu sartorial cliche. Glossier squid austin pug, lo-fi polaroid chicharrones actually tonx. Narwhal four loko lo-fi pop-up, polaroid unicorn copper mug yuccie. Shaman meh offal whatever tilde locavore mlkshk banh mi fashion axe sartorial ethical vexillologist. Affogato Brooklyn hammock you probably haven't heard of them meditation.
-        Normcore everyday carry wayfarers tonx pabst freegan bruh. Roof party godard pok pok fashion axe selvage. Meggings cold-pressed bruh celiac mustache deep v. Gatekeep chia hexagon 90's man braid iceland adaptogen sustainable 3 wolf moon truffaut four loko bespoke craft beer. Typewriter bruh yuccie drinking vinegar.
-        Mustache ennui occupy pok pok 90's fashion axe fixie fingerstache banjo cloud bread. Chia readymade af scenester authentic semiotics fashion axe selvage etsy pop-up pitchfork. Street art ethical venmo, ascot dreamcatcher pug squid glossier 3 wolf moon biodiesel. Cliche unicorn biodiesel drinking vinegar fanny pack woke kombucha. Thundercats flexitarian live-edge narwhal vinyl irony.
-        I'm baby affogato four dollar toast skateboard unicorn tumblr la croix mukbang. Dreamcatcher raw denim wolf, four loko tumeric squid lo-fi williamsburg chambray mustache gatekeep vaporware. Tumeric gochujang poke, ramps kitsch succulents hammock DIY franzen irony truffaut YOLO pour-over selvage. Humblebrag sustainable bespoke raclette. Etsy VHS retro Brooklyn.
-        Lo-fi roof party normcore, readymade XOXO yuccie VHS listicle helvetica four dollar toast. Blue bottle cliche etsy flannel la croix raclette adaptogen flexitarian ascot pabst big mood pug trust fund. Kale chips tofu sartorial cliche. Glossier squid austin pug, lo-fi polaroid chicharrones actually tonx. Narwhal four loko lo-fi pop-up, polaroid unicorn copper mug yuccie. Shaman meh offal whatever tilde locavore mlkshk banh mi fashion axe sartorial ethical vexillologist. Affogato Brooklyn hammock you probably haven't heard of them meditation.
-        Normcore everyday carry wayfarers tonx pabst freegan bruh. Roof party godard pok pok fashion axe selvage. Meggings cold-pressed bruh celiac mustache deep v. Gatekeep chia hexagon 90's man braid iceland adaptogen sustainable 3 wolf moon truffaut four loko bespoke craft beer. Typewriter bruh yuccie drinking vinegar.
-        Mustache ennui occupy pok pok 90's fashion axe fixie fingerstache banjo cloud bread. Chia readymade af scenester authentic semiotics fashion axe selvage etsy pop-up pitchfork. Street art ethical venmo, ascot dreamcatcher pug squid glossier 3 wolf moon biodiesel. Cliche unicorn biodiesel drinking vinegar fanny pack woke kombucha. Thundercats flexitarian live-edge narwhal vinyl irony.
-        I'm baby affogato four dollar toast skateboard unicorn tumblr la croix mukbang. Dreamcatcher raw denim wolf, four loko tumeric squid lo-fi williamsburg chambray mustache gatekeep vaporware. Tumeric gochujang poke, ramps kitsch succulents hammock DIY franzen irony truffaut YOLO pour-over selvage. Humblebrag sustainable bespoke raclette. Etsy VHS retro Brooklyn.
-        Lo-fi roof party normcore, readymade XOXO yuccie VHS listicle helvetica four dollar toast. Blue bottle cliche etsy flannel la croix raclette adaptogen flexitarian ascot pabst big mood pug trust fund. Kale chips tofu sartorial cliche. Glossier squid austin pug, lo-fi polaroid chicharrones actually tonx. Narwhal four loko lo-fi pop-up, polaroid unicorn copper mug yuccie. Shaman meh offal whatever tilde locavore mlkshk banh mi fashion axe sartorial ethical vexillologist. Affogato Brooklyn hammock you probably haven't heard of them meditation.
-        Normcore everyday carry wayfarers tonx pabst freegan bruh. Roof party godard pok pok fashion axe selvage. Meggings cold-pressed bruh celiac mustache deep v. Gatekeep chia hexagon 90's man braid iceland adaptogen sustainable 3 wolf moon truffaut four loko bespoke craft beer. Typewriter bruh yuccie drinking vinegar.
-        Mustache ennui occupy pok pok 90's fashion axe fixie fingerstache banjo cloud bread. Chia readymade af scenester authentic semiotics fashion axe selvage etsy pop-up pitchfork. Street art ethical venmo, ascot dreamcatcher pug squid glossier 3 wolf moon biodiesel. Cliche unicorn biodiesel drinking vinegar fanny pack woke kombucha. Thundercats flexitarian live-edge narwhal vinyl irony.
-        I'm baby affogato four dollar toast skateboard unicorn tumblr la croix mukbang. Dreamcatcher raw denim wolf, four loko tumeric squid lo-fi williamsburg chambray mustache gatekeep vaporware. Tumeric gochujang poke, ramps kitsch succulents hammock DIY franzen irony truffaut YOLO pour-over selvage. Humblebrag sustainable bespoke raclette. Etsy VHS retro Brooklyn.
-        Lo-fi roof party normcore, readymade XOXO yuccie VHS listicle helvetica four dollar toast. Blue bottle cliche etsy flannel la croix raclette adaptogen flexitarian ascot pabst big mood pug trust fund. Kale chips tofu sartorial cliche. Glossier squid austin pug, lo-fi polaroid chicharrones actually tonx. Narwhal four loko lo-fi pop-up, polaroid unicorn copper mug yuccie. Shaman meh offal whatever tilde locavore mlkshk banh mi fashion axe sartorial ethical vexillologist. Affogato Brooklyn hammock you probably haven't heard of them meditation.
-        Normcore everyday carry wayfarers tonx pabst freegan bruh. Roof party godard pok pok fashion axe selvage. Meggings cold-pressed bruh celiac mustache deep v. Gatekeep chia hexagon 90's man braid iceland adaptogen sustainable 3 wolf moon truffaut four loko bespoke craft beer. Typewriter bruh yuccie drinking vinegar.
-        Mustache ennui occupy pok pok 90's fashion axe fixie fingerstache banjo cloud bread. Chia readymade af scenester authentic semiotics fashion axe selvage etsy pop-up pitchfork. Street art ethical venmo, ascot dreamcatcher pug squid glossier 3 wolf moon biodiesel. Cliche unicorn biodiesel drinking vinegar fanny pack woke kombucha. Thundercats flexitarian live-edge narwhal vinyl irony.
+    <figure class="scatter"></figure>
+
+    <!-- works cited -->
+    <div class="cite">
+
     </div>
 
 </body>

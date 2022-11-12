@@ -1,3 +1,4 @@
+/* TOOLTIP */
 div.tooltip { 
     position: absolute;     
     text-align: left; 
@@ -10,75 +11,179 @@ div.tooltip {
     opacity: 0.7;   
 }
 
-#lag_x_axis > .domain, #lag_y_axis > .domain {
+/* AXIS */
+#lag_x_axis > .domain, #lag_y_axis > .domain, .grid > .domain {
     fill: none;
     stroke: none;
+}
+
+#lag_x_axis line, #lag_y_axis line {
+    visibility: hidden;
 }
 
 .tick line {
     visibility: hidden;
 }
 
-.step, body {
-    font-family: sans-serif;
-    font-size: 12pt;
-}
-
-.step {
-    background-color: white;
-    opacity: 90%;
-    position: relative;
-    overflow: scroll;
-    margin-bottom: 90vh;
-    text-align: center;
-    justify-content: center;
-    align-items: center;
+.grid line {
+    stroke: #DBDBDB;
+    fill: #DBDBDB;
+    opacity: 0.5;
+    visibility: visible !important
 }
 
 text {
     font-size: 8pt;
 }
 
+/* MAIN BODY TEXT */
+body {
+    font-family: sans-serif;
+    line-height: 1.4;
+    color: black;
+}
+
 .body_text {
+    margin-bottom: 2%;
+}
+
+.header, .byline {
+    text-align: center;
+    justify-content: center;
+    align-items: center;
+    margin: auto;
+    font-weight: bold;
+}
+
+.byline {
+    color: gray;
+}
+
+.title {
     margin-top: 5%;
-    margin-bottom: 5%;
+    margin-bottom: 3%;
 }
 
+/* highlight text */
+.mobility_week_highlight {
+    background-color: #D9A4C5;
+    color: white;
+    border-radius: 8px;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+    padding: 0 5px 0 5px;
+}
+
+.sah_week_highlight {
+    background-color: #1D5902;
+    color: white;
+    border-radius: 8px;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+    padding: 0 5px 0 5px;
+}
+
+/* SCREEN SIZE */
+/* big screens */
 @media screen and (min-width: 900px) {
-    .body_text {
-      margin-left: 25%;
-      margin-right: 25%
+    .body_text, .graph_title, .graph_byline, .title {
+      margin-left: 28%;
+      margin-right: 28%;
     }
 
-    .step {
-        margin-left: 30%;
-        margin-right: 30%;
+    .body_text {
+        font-size: 15pt;
+    }
+
+    .graph_title, .byline {
+        font-size: 16pt;
+    }
+
+    .header {
+        font-size: 36pt;
     }
 }
 
+/* small screens */
 @media screen and (max-width: 900px) {
-    .body_text {
+    .body_text, .graph_title, .graph_byline {
       margin-left: 3%;
-      margin-right: 3%
+      margin-right: 3%;
     }
 
-    .step {
-        margin-left: 10%;
-        margin-right: 10%;
+    .body_text, .graph_byline {
+        font-size: 11pt;
+    }
+
+    .graph_title, .byline {
+        font-size: 13pt;
+    }
+
+    .header {
+        font-size: 24pt;
     }
     
 }
 
-#step2 {
-    margin-bottom: 120vh;
-}
-
-.lag, .us-graph {
+/* VIZ */
+.lag, .us-graph, .scatter, .checkboxes {
     text-align: center;
     justify-content: center;
     align-items: center;
+    margin-top: 0%;
+    margin-bottom: 5%;
+    margin-left: 0%  !important;
+    margin-right: 0%  !important
 }
 
-.pin-spacer, .us-graph {
-    margin: 0% !important;
+/* VIZ TITLES */
+.graph_title {
+    font-weight: bold;
+}
+
+.graph_title_container {
+    margin-bottom: 20px;
+}
+
+.graph_title {
+    margin-bottom: 10px;
+}
+
+.graph_byline {
+    color: #DBDBDB;
+}
+
+/* CHECKBOXES */
+.checkbox:hover {
+    accent-color: grey;
+}
+
+#cb2008:checked {
+    accent-color: #B55997;
+}
+
+#cb2101:checked {
+    accent-color: #D9A4C5;
+}
+
+#cb2104:checked {
+    accent-color: #F8D7EB;
+}
+  
+/* VIZ TITLES */
+.graph_title {
+    font-weight: bold;
+}
+
+.graph_title_container {
+    margin-bottom: 20px;
+    margin-top: 5%;
+}
+
+.graph_title {
+    margin-bottom: 5px;
+}
+
+.graph_byline {
+    color: gray;
 }
