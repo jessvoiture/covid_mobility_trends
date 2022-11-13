@@ -6,7 +6,7 @@ div.tooltip {
     height: auto;  
     padding: 5px;       
     font-family: Arial, Helvetica, sans-serif;   
-    font-size: 12pt;
+    font-size: 10pt;
     font-weight: bold;
     background: white; 
     opacity: 0.7;   
@@ -217,7 +217,7 @@ body {
 /* LINKS */
 a:link {
     color: #1D5902;
-    text-decoration: wavy underline;
+    text-decoration: underline;
     -webkit-any-link: none;
 }
 
