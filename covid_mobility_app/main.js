@@ -29,7 +29,8 @@ const milestones = [
 const num_states = 43; // 43 states with stay at home orders (7 never implemented one)
 const line_width = 2 // lines (arrow and connecting dots)
 const week_filter = 20; // how many weeks to include on area chart
-const label_type_size = 9; // type size of axis labels using for spacing
+const label_type_size = 9.5; // type size of axis labels using for spacing
+const lag_label_type_size = 8;
 
 // tooltip
 const div = d3.select("body")
@@ -39,9 +40,9 @@ const div = d3.select("body")
 
 // legends
 const state_leg_data = [
-    { label: 'Largest mobility decline',    size: 4, color: "#D9A4C5"   },
-    { label: 'Stay-at-home order began',    size: 8, color: "#1D5902"   },
-    {                                       size: 12,                   }
+    { label: 'Largest mobility decline',    size: 4, color: "#D9A4C5", party: "Democrat governor"},
+    { label: 'Lockdown start',              size: 8, color: "#1D5902", party: "Republican governor"},
+    {                                       size: 12,                                   }
 ];
 
 const leg_circ_size = 8;
@@ -210,6 +211,29 @@ Promise.all([
             state_leg_size_lab = d3.selectAll(".state_leg")
                 .append("text")
                 .text("New Covid Cases (log)")
+
+            // circles for party
+            state_leg_party = d3.selectAll(".state_leg")
+                .selectAll(null)
+                .data(col_circ)
+                .enter()
+                .append("circle")
+                .attr("r", 4)
+                .style("fill", function(d) {
+                    if (d.party == "Democrat governor"){
+                        return "blue"
+                    } else {
+                        return "red"
+                    }
+                })
+
+            // label for party circles
+            state_leg_party_lab = d3.selectAll(".state_leg")
+                .selectAll(null)
+                .data(col_circ)
+                .enter()
+                .append("text")
+                .text(function(d) {return d.party;});
 
 
     /* US NATIONAL GRAPH */
@@ -576,10 +600,12 @@ Promise.all([
             if (screen_width > 900) {
                 width = screen_width * 0.44; 
                 ticks_unit = d3.timeDay.every(4);
+                leg_width = 0.7 * width;
             // mobile set up
             } else {
                 width = screen_width * 0.9;
                 ticks_unit = d3.timeDay.every(7);
+                leg_width = 0.58 * width;
              }
 
     /* STATE DATA */ 
@@ -634,6 +660,27 @@ Promise.all([
                 .attr('text-anchor', 'start')
                 .attr("id", function(d, i) { return state_data[i].Code; });
 
+            // party circles
+            party_circ = d3.select("#lag_y_axis")
+                .append("g")
+                .attr("class", "party_circ")
+                .selectAll(null)
+                .data(state_data)
+                .enter()
+                .append("circle")
+                .attr("class", "party")
+                .attr("id", function(d, i) { return d.Code; })
+                .attr("r", 2.5)
+                .style("fill", function(d) {
+                    if (d.governor_party == "democrat"){
+                        return "blue"
+                    } else {
+                        return "red"
+                    }})
+                .attr("cx", label_type_size + 5)
+                .attr("cy", function(d) {
+                    return y_scale(d.Code) + lag_label_type_size})
+
             lines_btwn 
                 .attr("x1", function(d) {
                     return x_scale(d.week_start_date);
@@ -647,7 +694,7 @@ Promise.all([
                 .attr("y2", function(d, i) {
                     return y_scale(d.Code);
                 })
-                .attr("transform", "translate(" + margin.left + "," + (margin.top + 8) + ")");
+                .attr("transform", "translate(" + margin.left + "," + (margin.top + lag_label_type_size) + ")");
             
             start_circs
                 .attr("cx", function(d) {
@@ -656,7 +703,7 @@ Promise.all([
                 .attr("cy", function(d, i) {
                     return y_scale(d.Code);
                 })
-                .attr("transform", "translate(" + margin.left + "," + (margin.top + 8) + ")");
+                .attr("transform", "translate(" + margin.left + "," + (margin.top + lag_label_type_size) + ")");
             
             sah_circs
                 .attr("cx", function(d) {
@@ -665,32 +712,51 @@ Promise.all([
                 .attr("cy", function(d, i) {
                     return y_scale(d.Code);
                 })
-                .attr("transform", "translate(" + margin.left + "," + (margin.top + 8) + ")"); 
+                .attr("transform", "translate(" + margin.left + "," + (margin.top + lag_label_type_size) + ")"); 
 
             // legend
+            var color_start_height = margin.top * 2.5;
+            var size_start_height = color_start_height + 2.5 * leg_padding;
+            var party_start_height = size_start_height + 2.5 * leg_padding;
+
+            // color of circles
             state_leg
-                .attr("cx", width * 0.7) // appear on right side of graph
+                .attr("cx", leg_width) // appear on right side of graph
                 .attr("cy", function(d, i) {
                     // vertical alignment
-                    return (margin.top * 2) + i * leg_padding;
+                    return color_start_height + i * leg_padding;
                 });
 
             state_leg_color_lab
-                .attr("x", width * 0.7 + 15)
+                .attr("x", leg_width + 15)
                 .attr("y", function(d, i) {
                     // vertical alignment
-                    return (margin.top * 2) + (i * leg_padding) + leg_circ_size / 2;
+                    return color_start_height + (i * leg_padding) + leg_circ_size / 2;
                 });
 
+            // sizes of circles
             state_leg_sizes
                 .attr("cx", function(d, i) {
-                    return (width * 0.7) + i * leg_padding;
+                    return leg_width + i * leg_padding;
                 })
-                .attr("cy", (margin.top * 2) + (2.5 * leg_padding) + leg_circ_size / 2)
+                .attr("cy", size_start_height)
 
             state_leg_size_lab
-                .attr("x", (width * 0.7) - leg_circ_size / 2)
-                .attr("y", (margin.top * 2) + (3.6 * leg_padding) + leg_circ_size / 2)
+                .attr("x", leg_width - leg_circ_size / 2)
+                .attr("y", size_start_height + leg_padding + 5)
+
+            // party circles
+            state_leg_party
+                .attr("cx", leg_width)
+                .attr("cy", function(d, i) {
+                    return party_start_height + i * leg_padding;
+                })
+
+            state_leg_party_lab
+                .attr("x", leg_width + 15)
+                .attr("y", function(d, i) {
+                    return party_start_height + (i * leg_padding) + leg_circ_size / 2;
+                })
 
     /* US LINE GRAPH DATA */
             us_height = screen_height / 2.2;
@@ -870,7 +936,7 @@ Promise.all([
             }
 
             scatter_x_grid
-                .attr("transform", "translate(" + margin.left + "," + (scatter_height - margin.top) + ")")
+                .attr("transform", "translate(" + margin.left + "," + (scatter_height - 2 * margin.top) + ")")
                 .call(make_scatter_x_gridlines()
                     .tickSize(-(scatter_height - margin.top))
                     .tickFormat("")
@@ -910,7 +976,7 @@ Promise.all([
                     return x_scale_scatter(d.log_weekly_cases_per_100k); })
                 .attr("cy", function (d) { 
                     return y_scale_scatter(d.pct_change_baseline); } )
-                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+                .attr("transform", "translate(" + margin.left + "," + 0 + ")");
         }
 
 // INIT
@@ -931,6 +997,10 @@ Promise.all([
             div.transition()
                 .duration(100)
                 .style("opacity", 1);
+
+            div.html("<span class = tooltip_text>" + d.region + ": " + d.mobility_lockdown_lag_wk + " week lag" + "</span>")
+                .style("left", (e.pageX + 5 ) + "px")
+                .style("top", (e.pageY - 25) + "px");
 
             var this_id = d3.select(this).attr("id");
 
