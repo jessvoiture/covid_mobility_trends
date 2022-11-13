@@ -13,27 +13,46 @@ div.tooltip {
 }
 
 /* AXIS */
-#lag_x_axis > .domain, #lag_y_axis > .domain, .grid > .domain {
-    fill: none;
-    stroke: none;
-}
-
-#lag_x_axis line, #lag_y_axis line {
-    visibility: hidden;
-}
-
 .tick line {
     visibility: hidden;
 }
 
 .grid line {
-    stroke: #DBDBDB;
-    fill: #DBDBDB;
-    opacity: 0.5;
+    stroke: #ABABAB;
+    fill: #ABABAB;
+    opacity: 0.2;
     visibility: visible !important
 }
 
+.y_label_text text, .x_label_text text {
+    font-weight: bold;
+    font-size: 9.5pt;
+}
+
 text {
+    font-size: 9pt;
+    color: #ABABAB;
+}
+
+.domain {
+    stroke: #ABABAB;
+    opacity: 0.7;
+}
+
+#lag_x_axis > .domain, #lag_y_axis > .domain, .grid > .domain {
+    fill: none;
+    stroke: none;
+}
+
+#lag_x_axis line, #lag_y_axis line, .y_axis .domain {
+    visibility: hidden;
+}
+
+#lag_x_axis text, #lag_y_axis text, #us_x_axis text {
+    color: black;
+}
+
+#lag_y_axis text {
     font-size: 8pt;
 }
 
@@ -53,7 +72,7 @@ body {
     justify-content: center;
     align-items: center;
     margin: auto;
-    font-weight: bold;
+    font-weight: 600;
 }
 
 .byline {
@@ -66,7 +85,7 @@ body {
 }
 
 /* highlight text */
-.mobility_week_highlight {
+.pink_highlight {
     background-color: #D9A4C5;
     color: white;
     border-radius: 8px;
@@ -75,26 +94,8 @@ body {
     padding: 0 5px 0 5px;
 }
 
-.sah_week_highlight {
+.green_highlight {
     background-color: #1D5902;
-    color: white;
-    border-radius: 8px;
-    -webkit-box-decoration-break: clone;
-    box-decoration-break: clone;
-    padding: 0 5px 0 5px;
-}
-
-.lockdown_highlight {
-    background-color: #1D5902;
-    color: white;
-    border-radius: 8px;
-    -webkit-box-decoration-break: clone;
-    box-decoration-break: clone;
-    padding: 0 5px 0 5px;
-}
-
-.no_lockdown_highlight {
-    background-color: #D9A4C5;
     color: white;
     border-radius: 8px;
     -webkit-box-decoration-break: clone;
@@ -140,6 +141,8 @@ body {
 
     .header {
         font-size: 24pt;
+        margin-left: 10%;
+        margin-right: 10%;
     }
 }
 
@@ -149,13 +152,14 @@ body {
     justify-content: center;
     align-items: center;
     margin: 0% 0% 3% 0%;
+    z-index: 1;
 }
 
 .checkboxes {
     text-align: center;
     justify-content: center;
     align-items: center;
-    margin-top: 0% 0% 1% 0%;
+    margin: 0% 0% 3% 0%;
 }
 
 /* VIZ TITLES */
@@ -208,4 +212,28 @@ body {
 
 .graph_byline {
     color: gray;
+}
+
+/* LINKS */
+a:link {
+    color: #1D5902;
+    text-decoration: wavy underline;
+    -webkit-any-link: none;
+}
+
+a:hover {
+    color: #B55997;
+    text-decoration: underline;
+    -webkit-any-link: none;
+}
+
+a:visited {
+    color: #B55997;
+    text-decoration: underline;
+    -webkit-any-link: none;
+}
+
+/* legend */
+.state_leg {
+    background-color: white;
 }
